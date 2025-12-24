@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ナンプレ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #4caf50;
+            color: #ffffff;
+            text-align: center;
+            padding: 15px;
+            position: relative;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        nav {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            margin-left: 15px;
+            font-size: 16px;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+            margin: auto;
+            max-width: 470px;
+            background-color: #ffffff;
+            border: 1px solid #dddddd;
+            border-radius: 8px;
+        }
+
+        .difficulty {
+            margin-bottom: 20px;
+        }
+
+        #sudoku-board {
+            display: grid;
+            grid-template-columns: repeat(9, 50px);
+            grid-template-rows: repeat(9, 50px);
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 18px;
+            border: 1px solid #cccccc;
+            background-color: #ffffff;
+            position: relative;
+        }
+
+        .cell-input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            font-size: 18px;
+            background-color: transparent;
+        }
+
+        .memo {
+            font-size: 12px;
+            color: #666;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+        }
+
+        /* 指定されたマスを水色で埋める */
+        #sudoku-board .cell:nth-child(4),
+        #sudoku-board .cell:nth-child(5),
+        #sudoku-board .cell:nth-child(6),
+        #sudoku-board .cell:nth-child(13),
+        #sudoku-board .cell:nth-child(14),
+        #sudoku-board .cell:nth-child(15),
+        #sudoku-board .cell:nth-child(22),
+        #sudoku-board .cell:nth-child(23),
+        #sudoku-board .cell:nth-child(24),
+        #sudoku-board .cell:nth-child(28),
+        #sudoku-board .cell:nth-child(29),
+        #sudoku-board .cell:nth-child(30),
+        #sudoku-board .cell:nth-child(34),
+        #sudoku-board .cell:nth-child(35),
+        #sudoku-board .cell:nth-child(36),
+        #sudoku-board .cell:nth-child(37),
+        #sudoku-board .cell:nth-child(38),
+        #sudoku-board .cell:nth-child(39),
+        #sudoku-board .cell:nth-child(43),
+        #sudoku-board .cell:nth-child(44),
+        #sudoku-board .cell:nth-child(45),
+        #sudoku-board .cell:nth-child(46),
+        #sudoku-board .cell:nth-child(47),
+        #sudoku-board .cell:nth-child(48),
+        #sudoku-board .cell:nth-child(52),
+        #sudoku-board .cell:nth-child(53),
+        #sudoku-board .cell:nth-child(54),
+        #sudoku-board .cell:nth-child(58),
+        #sudoku-board .cell:nth-child(59),
+        #sudoku-board .cell:nth-child(60),
+        #sudoku-board .cell:nth-child(67),
+        #sudoku-board .cell:nth-child(68),
+        #sudoku-board .cell:nth-child(69),
+        #sudoku-board .cell:nth-child(76),
+        #sudoku-board .cell:nth-child(77),
+        #sudoku-board .cell:nth-child(78),
+        #sudoku-board .cell:nth-child(85),
+        #sudoku-board .cell:nth-child(86),
+        #sudoku-board .cell:nth-child(87) {
+            background-color: #e0f7fa;
+        }
+
+        .controls {
+            margin-top: 10px;
+        }
+
+        button {
+            height: 40px;
+            width: 110px;
+            margin: 10px;
+            background-color: #4caf50;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        footer {
+            background-color: #4caf50;
+            color: #ffffff;
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        #timer {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        /* メモモードの状態表示 */
+        #memoModeStatus {
+            font-size: 18px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* アーカイブ表示のスタイル */
+        #archiveSection {
+            margin-top: 20px;
+            border-top: 1px solid #dddddd;
+            padding-top: 10px;
+        }
+
+        #archiveList {
+            margin-top: 10px;
+        }
+
+        .archive-item {
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #dddddd;
+            border-radius: 4px;
+        }
+
+        .archive-item button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ナンプレ</h1>
+    </header>
+    <main>
+        <div class="difficulty">
+            <label><input type="radio" name="difficulty" value="easy" checked />かんたん</label>
+            <label><input type="radio" name="difficulty" value="medium" />ふつう</label>
+            <label><input type="radio" name="difficulty" value="hard" />むずかしい</label>
+            <label><input type="radio" name="difficulty" value="oni" />鬼</label>
+        </div>
+        <button id="generateButton">ナンプレ生成</button>
+        <div id="timer">0:00</div>
+        <div id="sudoku-board"></div>
+        <div class="controls">
+            <button id="hintButton">ヒント</button>
+            <button id="solveButton">回答</button>
+            <button id="giveupButton">ギブアップ</button>
+            <button id="memoButton">メモモード</button>
+            <button id="saveArchiveButton">アーカイブ</button>
+            <button id="pauseButton">一時停止</button>
+        </div>
+        <div id="memoModeStatus">メモモード(Mキー): オフ</div>
+        <div id="archiveSection">
+            <h2>アーカイブ(Nキー)</h2>
+            <div id="archiveList"></div>
+        </div>
+    </main>
+    <footer>
+        <p>のみのみ道場 ~ナンプレ編~</p>
+    </footer>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+        const boardElement = document.getElementById("sudoku-board");
+        const archiveList = document.getElementById("archiveList");
+        let currentBoard = [];
+        let solvedBoard = [];
+        let hintCount = 0;
+        let maxHints = 1;
+        let selectedCell = null;
+        let memoMode = false;
+        let timer = null;
+        let timeElapsed = 0;
+        let isPaused = false;
+        let archives = [];
+
+        document.getElementById("generateButton").addEventListener("click", generateSudoku);
+        document.getElementById("hintButton").addEventListener("click", provideHint);
+        document.getElementById("solveButton").addEventListener("click", checkSolution);
+        document.getElementById("giveupButton").addEventListener("click", giveUp);
+        document.getElementById("memoButton").addEventListener("click", toggleMemoMode);
+        document.getElementById("saveArchiveButton").addEventListener("click", saveArchive);
+        document.getElementById("pauseButton").addEventListener("click", togglePause);
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'm' || event.key === 'M') {
+                toggleMemoMode();
+            }
+            if (event.key === 'n' || event.key === 'N') {
+                saveArchive();
+            }
+        });
+
+        function toggleMemoMode() {
+            memoMode = !memoMode;
+            updateMemoModeDisplay();
+        }
+
+        function updateMemoModeDisplay() {
+            const memoModeElement = document.getElementById("memoModeStatus");
+            memoModeElement.textContent = memoMode ? "メモモード(Mキー): オン" : "メモモード(Mキー): オフ";
+        }
+    
+        function togglePause() {
+            isPaused = !isPaused;
+            if (isPaused) {
+                clearInterval(timer);
+                alert("一時停止中です。");
+                disableInputs(true);
+            } else {
+                startTimer();
+                alert("再開しました。");
+                disableInputs(false);
+            }
+        }
+    
+        function disableInputs(disable) {
+            const inputs = document.querySelectorAll('.cell-input');
+            inputs.forEach(input => {
+                if (!input.disabled) {
+                    input.readOnly = disable;
+                }
+            });
+        }
+    
+        function generateSudoku() {
+            currentBoard = createBoard();
+            hintCount = 0;
+            fillRemaining(currentBoard);
+            solvedBoard = JSON.parse(JSON.stringify(currentBoard));
+            removeCells(currentBoard, getDifficulty());
+            displayBoard(currentBoard);
+        
+            timeElapsed = 0;
+            if (timer) clearInterval(timer);
+            startTimer();
+            updateMemoModeDisplay();
+        }
+    
+        function startTimer() {
+            timer = setInterval(() => {
+                if (!isPaused) {
+                    timeElapsed++;
+                    document.getElementById("timer").textContent = formatTime(timeElapsed);
+                }
+            }, 1000);
+        }
+    
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+    
+        function createBoard() {
+            const board = Array.from({ length: 9 }, () => Array(9).fill(0));
+            fillDiagonal(board);
+            return board;
+        }
+    
+        function fillDiagonal(board) {
+            for (let i = 0; i < 9; i += 3) {
+                fillBox(board, i, i);
+            }
+        }
+    
+        function fillBox(board, row, col) {
+            let num;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    do {
+                        num = Math.floor(Math.random() * 9) + 1;
+                    } while (!isSafeInBox(board, row, col, num));
+                    board[row + i][col + j] = num;
+                }
+            }
+        }
+    
+        function isSafeInBox(board, row, col, num) {
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (board[row + i][col + j] === num) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+    
+        function fillRemaining(board, i = 0, j = 3) {
+            if (j >= 9 && i < 8) {
+                i++;
+                j = 0;
+            }
+            if (i >= 9 && j >= 9) {
+                return true;
+            }
+            if (i < 3) {
+                if (j < 3) {
+                    j = 3;
+                }
+            } else if (i < 6) {
+                if (j === Math.floor(i / 3) * 3) {
+                    j += 3;
+                }
+            } else {
+                if (j === 6) {
+                    i++;
+                    j = 0;
+                    if (i >= 9) {
+                        return true;
+                    }
+                }
+            }
+            for (let num = 1; num <= 9; num++) {
+                if (isSafe(board, i, j, num)) {
+                    board[i][j] = num;
+                    if (fillRemaining(board, i, j + 1)) {
+                        return true;
+                    }
+                    board[i][j] = 0;
+                }
+            }
+            return false;
+        }
+    
+        function isSafe(board, i, j, num) {
+            return isSafeInRow(board, i, num) && isSafeInCol(board, j, num) && isSafeInBox(board, i - i % 3, j - j % 3, num);
+        }
+    
+        function isSafeInRow(board, i, num) {
+            for (let j = 0; j < 9; j++) {
+                if (board[i][j] === num) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    
+        function isSafeInCol(board, j, num) {
+            for (let i = 0; i < 9; i++) {
+                if (board[i][j] === num) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    
+        function removeCells(board, difficulty) {
+            let cellsToRemove;
+            switch (difficulty) {
+                case "easy":
+                    cellsToRemove = 34;
+                    maxHints = 1;
+                    break;
+                case "medium":
+                    cellsToRemove = 44;
+                    maxHints = 3;
+                    break;
+                case "hard":
+                    cellsToRemove = 54;
+                    maxHints = 5;
+                    break;
+                case "oni":
+                    cellsToRemove = 64;
+                    maxHints = 5;
+                    break;
+            }
+            while (cellsToRemove > 0) {
+                const i = Math.floor(Math.random() * 9);
+                const j = Math.floor(Math.random() * 9);
+                if (board[i][j] !== 0) {
+                    board[i][j] = 0;
+                    cellsToRemove--;
+                }
+            }
+        }
+    
+        function getDifficulty() {
+            const radios = document.getElementsByName("difficulty");
+            for (const radio of radios) {
+                if (radio.checked) {
+                    return radio.value;
+                }
+            }
+            return "easy";
+        }
+    
+        function displayBoard(board) {
+            const fragment = document.createDocumentFragment();
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    const cell = document.createElement("div");
+                    const input = document.createElement("input");
+                    input.type = "text";
+                    input.maxLength = 1;
+                    input.classList.add("cell-input");
+                    input.readOnly = isPaused;
+                    input.id = `cell-input-${row}-${col}`;
+                    input.name = `cell-input-${row}-${col}`;
+                    input.placeholder = " ";
+                    input.style.imeMode = "inactive";
+                    cell.classList.add("cell");
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.appendChild(input);
+                
+                    const memo = document.createElement("div");
+                    memo.classList.add("memo");
+                    cell.appendChild(memo);
+                
+                    input.value = board[row][col] || "";
+                    input.disabled = false;
+                
+                    input.addEventListener('focus', function() {
+                        selectedCell = cell;
+                    });
+                
+                    input.addEventListener('input', function() {
+                        if (!/^[1-9]$/.test(input.value)) {
+                            input.value = "";
+                            return;
+                        }
+                    
+                        if (memoMode) {
+                            addMemo(cell, input.value);
+                            input.value = "";
+                        } else {
+                            updateMemoDisplay(cell);
+                            currentBoard[row][col] = parseInt(input.value) || 0;
+                        }
+                    });
+                
+                    fragment.appendChild(cell);
+                }
+            }
+            boardElement.innerHTML = '';
+            boardElement.appendChild(fragment);
+        }
+    
+        function addMemo(cell, value) {
+            if (!cell.dataset.memo) {
+                cell.dataset.memo = "";
+            }
+            let memoValues = cell.dataset.memo.split(",");
+            if (memoValues.includes(value)) {
+                memoValues = memoValues.filter(v => v !== value);
+            } else {
+                memoValues.push(value);
+            }
+            cell.dataset.memo = memoValues.join(",");
+            updateMemoDisplay(cell);
+        }
+    
+        function updateMemoDisplay(cell) {
+            const memoDiv = cell.querySelector(".memo");
+            const memoValues = cell.dataset.memo.split(",").filter(v => v);
+            memoDiv.textContent = memoValues.join(" ");
+        }
+    
+        function provideHint() {
+            if (hintCount >= maxHints) {
+                alert("ヒントの回数が上限に達しました。");
+                return;
+            }
+            if (selectedCell) {
+                const row = parseInt(selectedCell.dataset.row);
+                const col = parseInt(selectedCell.dataset.col);
+                if (!selectedCell.querySelector('.cell-input').disabled && selectedCell.querySelector('.cell-input').value === "") {
+                    selectedCell.querySelector('.cell-input').value = solvedBoard[row][col];
+                    selectedCell.style.backgroundColor = "#ffeb3b";
+                    hintCount++;
+                } else {
+                    alert("既に入力があるか、選択されたセルが無効です。");
+                }
+            } else {
+                alert("ヒントを提供するにはセルを選択してください。");
+            }
+        }
+    
+        function updateCurrentBoard() {
+            const cells = document.querySelectorAll(".cell");
+            cells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const value = cell.querySelector('.cell-input').value;
+                currentBoard[row][col] = value ? parseInt(value) : 0;
+            });
+        }
+    
+        function checkSolution() {
+            updateCurrentBoard();
+            for (let i = 0; i < 9; i++) {
+                if (!isValidSet(currentBoard[i])) {
+                    alert("同じ行に重複があります。");
+                    return;
+                }
+            }
+        
+            for (let j = 0; j < 9; j++) {
+                const column = currentBoard.map(row => row[j]);
+                if (!isValidSet(column)) {
+                    alert("同じ列に重複があります。");
+                    return;
+                }
+            }
+        
+            for (let boxRow = 0; boxRow < 3; boxRow++) {
+                for (let boxCol = 0; boxCol < 3; boxCol++) {
+                    const box = [];
+                    for (let i = 0; i < 3; i++) {
+                        for (let j = 0; j < 3; j++) {
+                            box.push(currentBoard[boxRow * 3 + i][boxCol * 3 + j]);
+                        }
+                    }
+                    if (!isValidSet(box)) {
+                        alert("3x3のボックスに重複があります。");
+                        return;
+                    }
+                }
+            }
+        
+            alert("正解です！おめでとうございます！");
+            clearInterval(timer);
+        }
+    
+        function isValidSet(numbers) {
+            const seen = new Set();
+            for (let num of numbers) {
+                if (seen.has(num)) {
+                    return false;
+                }
+                seen.add(num);
+            }
+            return true;
+        }
+    
+        function giveUp() {
+            displayBoard(solvedBoard);
+            clearInterval(timer);
+        }
+    
+        function saveArchive() {
+            updateCurrentBoard();
+            const archive = {
+                board: JSON.parse(JSON.stringify(currentBoard)),
+                memos: Array.from(document.querySelectorAll('.cell')).map(cell => cell.dataset.memo || ""),
+                time: formatTime(timeElapsed)
+            };
+            archives.push(archive);
+            displayArchive(archive, archives.length);
+        }
+    
+        function displayArchive(archive, index) {
+            const archiveItem = document.createElement("div");
+            archiveItem.classList.add("archive-item");
+            archiveItem.innerHTML = `
+                <span>時刻: ${archive.time}</span>
+                <button onclick="loadArchive(${index - 1})">再現</button>
+            `;
+            archiveList.appendChild(archiveItem);
+        }
+    
+        window.loadArchive = function(index) {
+            const archive = archives[index];
+            currentBoard = JSON.parse(JSON.stringify(archive.board));
+            const memos = archive.memos;
+            displayBoard(currentBoard);
+        
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, idx) => {
+                cell.dataset.memo = memos[idx];
+                updateMemoDisplay(cell);
+            });
+        };
+    });
+        </script>
+    </body>
+    </html> 
