@@ -138,31 +138,43 @@ function generatePuzzle(difficulty = 'easy') {
     const solution = JSON.parse(JSON.stringify(fullBoard));
     const puzzle = JSON.parse(JSON.stringify(fullBoard));
 
-    let attempts;
+    // Target remaining clues
+    let targetClues;
     switch (difficulty) {
-        case 'medium': attempts = 40; break;
-        case 'hard': attempts = 50; break;
-        case 'expert': attempts = 60; break;
-        case 'easy': default: attempts = 30; break;
+        case 'medium': targetClues = 34; break;
+        case 'hard': targetClues = 28; break;
+        case 'expert': targetClues = 24; break;
+        case 'easy': default: targetClues = 45; break;
     }
 
-    // Try removing cells
-    while (attempts > 0) {
-        let row = Math.floor(Math.random() * GRID_SIZE);
-        let col = Math.floor(Math.random() * GRID_SIZE);
-
-        while (puzzle[row][col] === EMPTY) {
-            row = Math.floor(Math.random() * GRID_SIZE);
-            col = Math.floor(Math.random() * GRID_SIZE);
+    // Create a list of all positions to visit randomly
+    let positions = [];
+    for (let i = 0; i < GRID_SIZE; i++) {
+        for (let j = 0; j < GRID_SIZE; j++) {
+            positions.push([i, j]);
         }
+    }
+    shuffleArray(positions);
 
-        const backup = puzzle[row][col];
-        puzzle[row][col] = EMPTY;
+    // Current clues
+    let currentClues = 81;
 
-        const solutions = countSolutions(puzzle);
-        if (solutions !== 1) {
-            puzzle[row][col] = backup; // Put it back if unique solution is lost
-            attempts--; // Count as a failed attempt to remove more hard ones
+    // Try removing cells
+    // We iterate through all cells in random order.
+    // If we can remove it (unique solution remains), we do.
+    for (const [row, col] of positions) {
+        if (currentClues <= targetClues) break;
+
+        if (puzzle[row][col] !== EMPTY) {
+            const backup = puzzle[row][col];
+            puzzle[row][col] = EMPTY;
+
+            const solutions = countSolutions(puzzle);
+            if (solutions !== 1) {
+                puzzle[row][col] = backup; // multiple solutions, must keep
+            } else {
+                currentClues--; // success
+            }
         }
     }
 
