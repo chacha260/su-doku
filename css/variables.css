@@ -1,0 +1,78 @@
+:root {
+    /* Color Palette (Deep Ocean / Aurora Theme) */
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --accent-color: #38bdf8;
+    --accent-glow: rgba(56, 189, 248, 0.5);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --success-color: #4ade80;
+    --error-color: #f87171;
+    --warning-color: #fbbf24;
+
+    /* Glassmorphism Tokens */
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --glass-blur: 12px;
+
+    /* Grid configuration */
+    --cell-size: clamp(32px, 8vw, 54px);
+    --board-gap: 2px;
+    --block-gap: 8px;
+
+    /* Typography */
+    --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+}
+
+[data-theme="light"] {
+    --bg-primary: #f0f9ff;
+    --bg-secondary: #ffffff;
+    --accent-color: #0ea5e9;
+    --accent-glow: rgba(14, 165, 233, 0.3);
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    margin: 0;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Background Aurora Effect */
+body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 60%);
+    z-index: -1;
+    animation: rotate 20s linear infinite;
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
