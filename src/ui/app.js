@@ -30,7 +30,12 @@ App.UI.initApp = function () {
             <h1>Sudoku</h1>
             <div class="stats-bar">
                 <div class="stat-item">
-                     <span>Difficulty: <strong id="difficulty-display">Easy</strong></span>
+                     <select id="difficulty-select" style="background:transparent; border:none; color:inherit; font:inherit; cursor:pointer;">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                        <option value="expert">Expert</option>
+                     </select>
                 </div>
                 <div class="stat-item">
                      <span>Mistakes: <strong id="mistakes-display">0/3</strong></span>
@@ -113,7 +118,18 @@ function bindEvents() {
     document.getElementById('btn-note').addEventListener('click', () => store.toggleNoteMode());
     document.getElementById('btn-hint').addEventListener('click', () => store.getHint());
     document.getElementById('btn-new').addEventListener('click', () => {
-        if (confirm('Start new game?')) store.initGame('easy');
+        const difficulty = document.getElementById('difficulty-select').value;
+        if (confirm(`Start new ${difficulty} game?`)) store.initGame(difficulty);
+    });
+    document.getElementById('difficulty-select').addEventListener('change', (e) => {
+        if (confirm('Change difficulty and start new game?')) {
+            store.initGame(e.target.value);
+        } else {
+            // Revert selection if cancelled (visual only, simplified)
+            // Ideally we sync from store, but store update triggers render which fixes it
+            const { difficulty } = store.state;
+            e.target.value = difficulty;
+        }
     });
 }
 
@@ -144,6 +160,12 @@ function render(state) {
     } else {
         noteBtn.classList.remove('active');
         document.getElementById('note-status').textContent = "OFF";
+    }
+
+    // Update Difficulty Select if changed externally (e.g. init)
+    const diffSelect = document.getElementById('difficulty-select');
+    if (diffSelect && diffSelect.value !== state.difficulty) {
+        diffSelect.value = state.difficulty;
     }
 
     if (state.status === 'won') {
