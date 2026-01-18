@@ -16,7 +16,7 @@ const EMPTY = 0;
  * @param {number} num 
  * @returns {boolean}
  */
-App.Core.isValidMove = function (board, row, col, num) {
+function isValidMove(board, row, col, num) {
     if (board[row][col] !== EMPTY) return false;
 
     // Row Check
@@ -41,7 +41,8 @@ App.Core.isValidMove = function (board, row, col, num) {
     return true;
 }
 
-// Assign other functions to Namespace
+// Assign functions to Namespace
+App.Core.isValidMove = isValidMove;
 App.Core.solveSudoku = solveSudoku;
 App.Core.generateFullBoard = generateFullBoard;
 App.Core.generatePuzzle = generatePuzzle;
